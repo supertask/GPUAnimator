@@ -93,27 +93,22 @@ namespace GPUAnimator.Baker
                 animator.speed = 0;
                 animator.enabled = true;
                 animator.Play(clip.name);
-                yield return StartCoroutine(WaitForAnimation(animator, 0));
+                yield return StartCoroutine(WaitForAnimation(animator, clip, 0));
                 CreateAssets(clip);
                 currentClipIndex++;
             }
         }
 
-        IEnumerator WaitForAnimation(Animator animator, int layerIndex)
+        IEnumerator WaitForAnimation(Animator animator, AnimationClip clip, int layerIndex)
         {
-            bool isAnimationPlaying = true;
-            while (isAnimationPlaying)
+            for (var fi = 0; fi < this.texHeight; fi++)
             {
                 //フレームごとに実行される
-                AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(layerIndex);
-                int interpolatedFrameIndex = (int)(stateInfo.normalizedTime * this.texHeight);
-                RecordAnimation(interpolatedFrameIndex);
-                if (stateInfo.normalizedTime >= 1.0f)
-                {
-                    RecordAnimation(this.texHeight - 1);
-                    isAnimationPlaying = false;
-                }
-                yield return null;
+                //AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(layerIndex);
+                //int interpolatedFrameIndex = (int)(stateInfo.normalizedTime * this.texHeight);
+                animator.Play(clip.name, 0, (float)fi / this.texHeight);
+                RecordAnimation(fi);
+                yield return 0;
             }
         }
 
