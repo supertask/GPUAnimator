@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class GPUAnimator : MonoBehaviour {
 
-    public ComputeBuffer vertexBuffer;
+    public ComputeBuffer positionBuffer;
     public ComputeBuffer normalBuffer;
 
     Vector3[] positions;
@@ -19,7 +20,7 @@ public class GPUAnimator : MonoBehaviour {
 
     int vertexCount;
 
-    float animationTime;
+    float normalizedAnimTime;
 
     TextureAnimations textureAnimations;
     Animator animator;
@@ -58,9 +59,9 @@ public class GPUAnimator : MonoBehaviour {
 
     private void InitBuffer()
     {
-        vertexBuffer = new ComputeBuffer(vertexCount, Marshal.SizeOf(typeof(Vector3)));
+        positionBuffer = new ComputeBuffer(vertexCount, Marshal.SizeOf(typeof(Vector3)));
         positions = new Vector3[vertexCount];
-        vertexBuffer.SetData(positions);
+        positionBuffer.SetData(positions);
 
         normalBuffer = new ComputeBuffer(vertexCount, Marshal.SizeOf(typeof(Vector3)));
         normals = new Vector3[vertexCount];
@@ -80,85 +81,99 @@ public class GPUAnimator : MonoBehaviour {
             animator.SetBool("OnRun", false);
         }
 
-        if (block == null)
-            block = new MaterialPropertyBlock();
 
-        var currAnimState = animator.GetCurrentAnimatorStateInfo(0);
+        Profiler.BeginSample("MY TASK: Animation");
+            if (block == null)
+                block = new MaterialPropertyBlock();
 
-        if (prev_anim == null || prev_anim.fullPathHash != currAnimState.fullPathHash)
-        {
-            curr_anim = textureAnimations.Find(currAnimState.fullPathHash);
-        }
-        else
-        {
-            curr_anim = prev_anim;
-        }
+            var currAnimState = animator.GetCurrentAnimatorStateInfo(0);
 
-        if (curr_anim == null)
-            return;
+            if (prev_anim == null || prev_anim.fullPathHash != currAnimState.fullPathHash)
+            {
+                curr_anim = textureAnimations.Find(currAnimState.fullPathHash);
+            }
+            else
+            {
+                curr_anim = prev_anim;
+            }
 
-        prev_anim = curr_anim;
+            if (curr_anim == null)
+                return;
 
-        animationTime = currAnimState.normalizedTime;// Mathf.Repeat(, 1.0f);
+            prev_anim = curr_anim;
 
-        kernelShader.SetVector("TexelSize", curr_anim.texelSize);
-        kernelShader.SetFloat("AnimationTime", animationTime);
+            kernelShader.SetVector("_TexelSize", curr_anim.texelSize);
+            kernelShader.SetFloat("_NormalizedAnimTime", currAnimState.normalizedTime % 1.0f);
 
 
-        var nextAnimState = animator.GetNextAnimatorStateInfo(0);
+            var nextAnimState = animator.GetNextAnimatorStateInfo(0);
 
-        if (prev_next_anim == null || prev_next_anim.fullPathHash != nextAnimState.fullPathHash)
-        {
-            next_anim = textureAnimations.Find(nextAnimState.fullPathHash);
-        }
-        else
-        {
-            next_anim = prev_next_anim;
-        }
+            if (prev_next_anim == null || prev_next_anim.fullPathHash != nextAnimState.fullPathHash)
+            {
+                next_anim = textureAnimations.Find(nextAnimState.fullPathHash);
+            }
+            else
+            {
+                next_anim = prev_next_anim;
+            }
 
-        prev_next_anim = next_anim;
+            prev_next_anim = next_anim;
+        Profiler.EndSample();
+
+
+        //ここが重たい
+        //Profiler.BeginSample("MY TASK: COMPUTE");
 
         if (next_anim != null && nextAnimState.normalizedTime > 0)
         {
-            var transition =  animator.GetAnimatorTransitionInfo(0);
+
+            var transition = animator.GetAnimatorTransitionInfo(0);
+            //Debug.Log($"currAnim = {curr_anim.animationName}, currrPos ={curr_anim.positionAnimTexture.name},  nextAnimName = {next_anim.animationName} nextPos = {next_anim.positionAnimTexture.name},  transitionNormTime: {transition.normalizedTime} ");
+            Debug.Log($"currrPos ={curr_anim.positionAnimTexture.name}, nextPos = {next_anim.positionAnimTexture.name},  transitionNormTime: {transition.normalizedTime}, nextAnim normalizedTime = {nextAnimState.normalizedTime}  ");
 
             kernelShader.SetTexture(transitionAnimation_kernelIndex, "PositionAnimTexture", curr_anim.positionAnimTexture);
             kernelShader.SetTexture(transitionAnimation_kernelIndex, "NormalAnimTexture", curr_anim.normalAnimTexture);
 
             kernelShader.SetTexture(transitionAnimation_kernelIndex, "PositionAnimTexture_Next", next_anim.positionAnimTexture);
             kernelShader.SetTexture(transitionAnimation_kernelIndex, "NormalAnimTexture_Next", next_anim.normalAnimTexture);
-            kernelShader.SetVector("TexelSize_Next", next_anim.texelSize);
+            kernelShader.SetVector("_TexelSize_Next", next_anim.texelSize);
 
-            kernelShader.SetFloat("AnimationTime_Next", nextAnimState.normalizedTime);
+            kernelShader.SetFloat("_NormalizedAnimTime_Next", nextAnimState.normalizedTime % 1.0f);
 
-            kernelShader.SetFloat("TransitionTime", transition.normalizedTime);
+            kernelShader.SetFloat("_TransitionTime", transition.normalizedTime);
+            
 
-            kernelShader.SetBuffer(transitionAnimation_kernelIndex, "PositionBuffer", vertexBuffer);
+            kernelShader.SetBuffer(transitionAnimation_kernelIndex, "PositionBuffer", positionBuffer);
             kernelShader.SetBuffer(transitionAnimation_kernelIndex, "NormalBuffer", normalBuffer);
 
-            kernelShader.Dispatch(transitionAnimation_kernelIndex, vertexCount / 8 + 1, 1, 1);
+            kernelShader.Dispatch(transitionAnimation_kernelIndex, vertexCount / 1024 + 1, 1, 1);
         }
         else
         {
+            Debug.Log($"No next anim. currAnim: {curr_anim.positionAnimTexture.name}");
             kernelShader.SetTexture(updateAnimation_kernelIndex, "PositionAnimTexture", curr_anim.positionAnimTexture);
             kernelShader.SetTexture(updateAnimation_kernelIndex, "NormalAnimTexture", curr_anim.normalAnimTexture);
 
-            kernelShader.SetBuffer(updateAnimation_kernelIndex, "PositionBuffer", vertexBuffer);
+            kernelShader.SetBuffer(updateAnimation_kernelIndex, "PositionBuffer", positionBuffer);
             kernelShader.SetBuffer(updateAnimation_kernelIndex, "NormalBuffer", normalBuffer);
 
-            kernelShader.Dispatch(updateAnimation_kernelIndex, vertexCount / 8 + 1, 1, 1);
+            kernelShader.Dispatch(updateAnimation_kernelIndex, vertexCount / 1024 + 1, 1, 1);
         }
+        //Profiler.EndSample();
 
-        block.SetBuffer("PositionBuffer", vertexBuffer);
+        //Profiler.BeginSample("MY TASK: Material block");
+        block.SetBuffer("PositionBuffer", positionBuffer);
         block.SetBuffer("NormalBuffer", normalBuffer);
 
         _renderer.SetPropertyBlock(block);
+        //Profiler.EndSample();
+
     }
 
     private void OnDisable()
     {
-        if (vertexBuffer != null)
-            vertexBuffer.Release();
+        if (positionBuffer != null)
+            positionBuffer.Release();
 
         if (normalBuffer != null)
             normalBuffer.Release();

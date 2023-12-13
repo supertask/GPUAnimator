@@ -1,110 +1,299 @@
 fileFormatVersion: 2
 guid: a748dee4242461842b2f083a18157d1f
 ModelImporter:
-  serializedVersion: 19
-  fileIDToRecycleName:
-    100000: Head
-    100002: Hips
-    100004: //RootNode
-    100006: Jaw
-    100008: L_Ear
-    100010: L_EarTop
-    100012: L_Eye
-    100014: LeftArm
-    100016: LeftFinger1
-    100018: LeftFoot
-    100020: LeftForeArm
-    100022: LeftHand
-    100024: LeftLeg
-    100026: LeftToeBase
-    100028: LeftToeBaseEnd
-    100030: LeftUpLeg
-    100032: Main
-    100034: MouthTop
-    100036: Neck
-    100038: Neck1
-    100040: Neck2
-    100042: R_Ear
-    100044: R_EarTop
-    100046: R_Eye
-    100048: RightArm
-    100050: RightFinger1
-    100052: RightFoot
-    100054: RightforeArm
-    100056: RightHand
-    100058: Rightleg
-    100060: RightToeBase
-    100062: RightToeBaseEnd
-    100064: RightUpLeg
-    100066: Root
-    100068: Spine
-    100070: Spine1
-    100072: Tail1
-    100074: Tail2
-    100076: Tail3
-    100078: Tail4
-    100080: Tail5
-    100082: Volume01
-    100084: Volume02
-    100086: Volume03
-    100088: Volume04
-    400000: Head
-    400002: Hips
-    400004: //RootNode
-    400006: Jaw
-    400008: L_Ear
-    400010: L_EarTop
-    400012: L_Eye
-    400014: LeftArm
-    400016: LeftFinger1
-    400018: LeftFoot
-    400020: LeftForeArm
-    400022: LeftHand
-    400024: LeftLeg
-    400026: LeftToeBase
-    400028: LeftToeBaseEnd
-    400030: LeftUpLeg
-    400032: Main
-    400034: MouthTop
-    400036: Neck
-    400038: Neck1
-    400040: Neck2
-    400042: R_Ear
-    400044: R_EarTop
-    400046: R_Eye
-    400048: RightArm
-    400050: RightFinger1
-    400052: RightFoot
-    400054: RightforeArm
-    400056: RightHand
-    400058: Rightleg
-    400060: RightToeBase
-    400062: RightToeBaseEnd
-    400064: RightUpLeg
-    400066: Root
-    400068: Spine
-    400070: Spine1
-    400072: Tail1
-    400074: Tail2
-    400076: Tail3
-    400078: Tail4
-    400080: Tail5
-    400082: Volume01
-    400084: Volume02
-    400086: Volume03
-    400088: Volume04
-    7400000: Horse_Run
-    9500000: //RootNode
-    11100000: //RootNode
+  serializedVersion: 21300
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: Head
+  - first:
+      1: 100002
+    second: Hips
+  - first:
+      1: 100004
+    second: //RootNode
+  - first:
+      1: 100006
+    second: Jaw
+  - first:
+      1: 100008
+    second: L_Ear
+  - first:
+      1: 100010
+    second: L_EarTop
+  - first:
+      1: 100012
+    second: L_Eye
+  - first:
+      1: 100014
+    second: LeftArm
+  - first:
+      1: 100016
+    second: LeftFinger1
+  - first:
+      1: 100018
+    second: LeftFoot
+  - first:
+      1: 100020
+    second: LeftForeArm
+  - first:
+      1: 100022
+    second: LeftHand
+  - first:
+      1: 100024
+    second: LeftLeg
+  - first:
+      1: 100026
+    second: LeftToeBase
+  - first:
+      1: 100028
+    second: LeftToeBaseEnd
+  - first:
+      1: 100030
+    second: LeftUpLeg
+  - first:
+      1: 100032
+    second: Main
+  - first:
+      1: 100034
+    second: MouthTop
+  - first:
+      1: 100036
+    second: Neck
+  - first:
+      1: 100038
+    second: Neck1
+  - first:
+      1: 100040
+    second: Neck2
+  - first:
+      1: 100042
+    second: R_Ear
+  - first:
+      1: 100044
+    second: R_EarTop
+  - first:
+      1: 100046
+    second: R_Eye
+  - first:
+      1: 100048
+    second: RightArm
+  - first:
+      1: 100050
+    second: RightFinger1
+  - first:
+      1: 100052
+    second: RightFoot
+  - first:
+      1: 100054
+    second: RightforeArm
+  - first:
+      1: 100056
+    second: RightHand
+  - first:
+      1: 100058
+    second: Rightleg
+  - first:
+      1: 100060
+    second: RightToeBase
+  - first:
+      1: 100062
+    second: RightToeBaseEnd
+  - first:
+      1: 100064
+    second: RightUpLeg
+  - first:
+      1: 100066
+    second: Root
+  - first:
+      1: 100068
+    second: Spine
+  - first:
+      1: 100070
+    second: Spine1
+  - first:
+      1: 100072
+    second: Tail1
+  - first:
+      1: 100074
+    second: Tail2
+  - first:
+      1: 100076
+    second: Tail3
+  - first:
+      1: 100078
+    second: Tail4
+  - first:
+      1: 100080
+    second: Tail5
+  - first:
+      1: 100082
+    second: Volume01
+  - first:
+      1: 100084
+    second: Volume02
+  - first:
+      1: 100086
+    second: Volume03
+  - first:
+      1: 100088
+    second: Volume04
+  - first:
+      4: 400000
+    second: Head
+  - first:
+      4: 400002
+    second: Hips
+  - first:
+      4: 400004
+    second: //RootNode
+  - first:
+      4: 400006
+    second: Jaw
+  - first:
+      4: 400008
+    second: L_Ear
+  - first:
+      4: 400010
+    second: L_EarTop
+  - first:
+      4: 400012
+    second: L_Eye
+  - first:
+      4: 400014
+    second: LeftArm
+  - first:
+      4: 400016
+    second: LeftFinger1
+  - first:
+      4: 400018
+    second: LeftFoot
+  - first:
+      4: 400020
+    second: LeftForeArm
+  - first:
+      4: 400022
+    second: LeftHand
+  - first:
+      4: 400024
+    second: LeftLeg
+  - first:
+      4: 400026
+    second: LeftToeBase
+  - first:
+      4: 400028
+    second: LeftToeBaseEnd
+  - first:
+      4: 400030
+    second: LeftUpLeg
+  - first:
+      4: 400032
+    second: Main
+  - first:
+      4: 400034
+    second: MouthTop
+  - first:
+      4: 400036
+    second: Neck
+  - first:
+      4: 400038
+    second: Neck1
+  - first:
+      4: 400040
+    second: Neck2
+  - first:
+      4: 400042
+    second: R_Ear
+  - first:
+      4: 400044
+    second: R_EarTop
+  - first:
+      4: 400046
+    second: R_Eye
+  - first:
+      4: 400048
+    second: RightArm
+  - first:
+      4: 400050
+    second: RightFinger1
+  - first:
+      4: 400052
+    second: RightFoot
+  - first:
+      4: 400054
+    second: RightforeArm
+  - first:
+      4: 400056
+    second: RightHand
+  - first:
+      4: 400058
+    second: Rightleg
+  - first:
+      4: 400060
+    second: RightToeBase
+  - first:
+      4: 400062
+    second: RightToeBaseEnd
+  - first:
+      4: 400064
+    second: RightUpLeg
+  - first:
+      4: 400066
+    second: Root
+  - first:
+      4: 400068
+    second: Spine
+  - first:
+      4: 400070
+    second: Spine1
+  - first:
+      4: 400072
+    second: Tail1
+  - first:
+      4: 400074
+    second: Tail2
+  - first:
+      4: 400076
+    second: Tail3
+  - first:
+      4: 400078
+    second: Tail4
+  - first:
+      4: 400080
+    second: Tail5
+  - first:
+      4: 400082
+    second: Volume01
+  - first:
+      4: 400084
+    second: Volume02
+  - first:
+      4: 400086
+    second: Volume03
+  - first:
+      4: 400088
+    second: Volume04
+  - first:
+      74: 7400000
+    second: Horse_Run
+  - first:
+      95: 9500000
+    second: //RootNode
+  - first:
+      111: 11100000
+    second: //RootNode
+  externalObjects: {}
   materials:
-    importMaterials: 1
+    materialImportMode: 1
     materialName: 0
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
     motionNodeName: 
     rigImportErrors: 
     rigImportWarnings: 
@@ -112,16 +301,20 @@ ModelImporter:
     animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
-    animationCompression: 1
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
+    extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
       name: Horse_Run
       takeName: Take 001
+      internalID: 0
       firstFrame: 0
       lastFrame: 24
       wrapMode: 0
@@ -243,26 +436,47 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 0
     importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 0
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 0
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
+    normalCalculationMode: 0
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
   importAnimation: 1
-  copyAvatar: 1
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human: []
     skeleton: []
     armTwist: 0.5
@@ -272,14 +486,18 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
+    globalScale: 1
     rootMotionBoneName: Root
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 1
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
   humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  remapMaterialsIfMaterialImportModeIsNone: 1
   additionalBone: 0
   userData: 
   assetBundleName: 

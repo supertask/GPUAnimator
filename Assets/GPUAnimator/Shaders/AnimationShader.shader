@@ -19,12 +19,13 @@
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 4.5
+			#pragma enable_d3d11_debug_symbols
 
 			#include "UnityCG.cginc"
 			#include "AutoLight.cginc"
 			#include "Lighting.cginc"
 
-			StructuredBuffer<float3> VertexBuffer;
+			StructuredBuffer<float3> PositionBuffer;
 			StructuredBuffer<float3> NormalBuffer;
 			
 			struct appdata
@@ -53,7 +54,7 @@
 			{
 				v2f o;
 
-				float3 vertex = VertexBuffer[v.vid];
+				float3 vertex = PositionBuffer[v.vid];
 				float3 normal = NormalBuffer[v.vid];
 
 				o.vertex = UnityObjectToClipPos(vertex);

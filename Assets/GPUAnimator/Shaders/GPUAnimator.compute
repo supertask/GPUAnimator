@@ -1,4 +1,5 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma enable_d3d11_debug_symbols
 #pragma kernel UpdateAnimation
 #pragma kernel TransitionAnimation
 
@@ -7,51 +8,52 @@ Texture2D<float3> PositionAnimTexture_Next;
 Texture2D<float3> NormalAnimTexture;
 Texture2D<float3> NormalAnimTexture_Next;
 
-float AnimationTime;
-float AnimationTime_Next;
+float _NormalizedAnimTime;
+float _NormalizedAnimTime_Next;
 
 RWStructuredBuffer<float3> PositionBuffer;
 RWStructuredBuffer<float3> NormalBuffer;
 
-float4 TexelSize;
-float4 TexelSize_Next;
+float4 _TexelSize;
+float4 _TexelSize_Next;
 
-float TransitionTime;
+float _TransitionTime;
 
-float3 tex2D(Texture2D<float3> tex, uint id, float t, float4 texelSize)
-{
-	float x = id;
-	float normalized_t = fmod(t, 1.0);
-	float y = normalized_t * (texelSize.w);
-
-	float3 p0 = tex[float2(x, trunc(y))];
-	float3 p1 = tex[float2(x, trunc(y) + 1)];
-
-	if (y > texelSize.w - 1)
-		p1 = tex[float2(x, 0)];
-
-	return lerp(p0, p1, frac(y));
-}
-
-[numthreads(8, 1, 1)]
+[numthreads(1024, 1, 1)]
 void UpdateAnimation(uint id : SV_DispatchThreadID)
 {
-	float3 pos = tex2D(PositionAnimTexture, id, AnimationTime, TexelSize);
-	float3 normal = tex2D(NormalAnimTexture, id, AnimationTime, TexelSize);
+	uint2 texPosition = uint2(id, (uint)(_NormalizedAnimTime * _TexelSize.w) );
+	if (texPosition.x >= _TexelSize.z || texPosition.y >= _TexelSize.w) return;
+
+	float3 pos = PositionAnimTexture[texPosition];
+	float3 normal = NormalAnimTexture[texPosition];
 
 	PositionBuffer[id] = pos;
 	NormalBuffer[id] = normal;
 }
 
-[numthreads(8, 1, 1)]
+[numthreads(1024, 1, 1)]
 void TransitionAnimation(uint id : SV_DispatchThreadID)
 {
-	float3 pos = tex2D(PositionAnimTexture, id, AnimationTime, TexelSize);
-	float3 normal = tex2D(NormalAnimTexture, id, AnimationTime, TexelSize);
+	uint2 texPosition = uint2(id, (uint)(_NormalizedAnimTime * _TexelSize.w) );
+	if (texPosition.x >= _TexelSize.z || texPosition.y >= _TexelSize.w) return;
 
-	float3 next_pos = tex2D(PositionAnimTexture_Next, id, AnimationTime_Next, TexelSize_Next);
-	float3 next_normal = tex2D(NormalAnimTexture_Next, id, AnimationTime_Next, TexelSize_Next);
+	uint2 texPositionNext = uint2(id, (uint)(_NormalizedAnimTime_Next * _TexelSize_Next.w) );
+	if (texPositionNext.x >= _TexelSize_Next.z || texPositionNext.y >= _TexelSize_Next.w) return;
 
-	PositionBuffer[id] = lerp(pos, next_pos, TransitionTime);
-	NormalBuffer[id] = lerp(normal, next_normal, TransitionTime);
+	float3 pos = PositionAnimTexture[texPosition];
+	float3 normal = NormalAnimTexture[texPosition];
+
+	float3 next_pos = PositionAnimTexture_Next[texPositionNext];
+	float3 next_normal = NormalAnimTexture_Next[texPositionNext];
+
+	PositionBuffer[id] = lerp(pos, next_pos, _TransitionTime);
+	NormalBuffer[id] = lerp(normal, next_normal, _TransitionTime);
+
+	//PositionBuffer[id] = next_pos;
+	//NormalBuffer[id] = next_normal;
+
+
+
+	//BUG: Walk=falseの時next_posは何もない状態になっている
 }

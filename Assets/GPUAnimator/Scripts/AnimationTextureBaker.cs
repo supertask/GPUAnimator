@@ -72,7 +72,7 @@ public class AnimationTextureBaker : MonoBehaviour
     GameObject prefab;
     void CreateObject(string objectName)
     {
-        Debug.Log("folderPath : " + folderPath);
+        Debug.Log("folderPath: " + folderPath);
         if (!AssetDatabase.IsValidFolder(folderPath))
             folderPath = AssetDatabase.CreateFolder(folderPath, objectName);
 
@@ -168,8 +168,11 @@ public class AnimationTextureBaker : MonoBehaviour
         bakedTextureAnimations.Add(bta);
         go.GetComponent<TextureAnimations>().SetItemSource(bakedTextureAnimations);
 
-        AssetDatabase.CreateAsset(posTex, Path.Combine(folderPath, pRt.name + ".asset"));
-        AssetDatabase.CreateAsset(normTex, Path.Combine(folderPath, nRt.name + ".asset"));
+        string posTexPath = Path.Combine(folderPath, pRt.name + ".asset");
+        string normTexPath = Path.Combine(folderPath, nRt.name + ".asset");
+        Debug.Log("posTexPath : " + posTexPath + "normTexPath: " + normTexPath);
+        AssetDatabase.CreateAsset(posTex, posTexPath);
+        AssetDatabase.CreateAsset(normTex, normTexPath);
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();

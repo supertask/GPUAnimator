@@ -118,7 +118,7 @@ public class FlowerParticleSystem : MonoBehaviour
         if (gpuAnimator == null)
             return;
 
-        mat.SetBuffer("vertexBuffer", gpuAnimator.vertexBuffer);
+        mat.SetBuffer("vertexBuffer", gpuAnimator.positionBuffer);
         mat.SetBuffer("positionBuffer", positionBuffer);
         mat.SetBuffer("triangleBuffer", triangleBuffer);
     }
