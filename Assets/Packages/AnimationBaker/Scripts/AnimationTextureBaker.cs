@@ -52,7 +52,10 @@ namespace GPUAnimator.Baker
         string objectDirPath;
 
         // Use this for initialization
-        void Start() { }
+        void Start()
+        {
+            //this.PlayBake(this.gameObject.name);
+        }
         public async void PlayBake(string objectName)
         {
             anim = GetComponent<Animation>();
@@ -68,6 +71,12 @@ namespace GPUAnimator.Baker
 
             CreateBaseDirectory(objectName);
             CreateObject(objectName);
+
+            foreach (AnimationState state in anim)
+            {
+                anim.Play(state.name);
+                await UniTask.Delay(TimeSpan.FromSeconds(3));
+            }
 
             foreach (AnimationState state in anim)
             {
@@ -118,16 +127,13 @@ namespace GPUAnimator.Baker
 
         private async UniTask Bake(AnimationState state)
         {
-            anim.Play(state.name);
-            anim.Sample();
-
-            await UniTask.Delay(TimeSpan.FromSeconds(5));
-
             //Debug.Log("name" + state.name);
-
+            anim.Play(state.name);
+            
+            await UniTask.Delay(TimeSpan.FromSeconds(7));
+            
             frames = Mathf.NextPowerOfTwo((int)(state.length / 0.05f));
             var dt = state.length / frames;
-            time = 0f;
             var infoList = new List<VertInfo>();
 
             //meshBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
@@ -135,11 +141,11 @@ namespace GPUAnimator.Baker
 
             Debug.Log("dt : " + dt);
 
-            pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
-            //pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
+            //pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
+            pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
             pRt.name = string.Format("{0}.{1}.posTex", name, state.name);
-            nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
-            //nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
+            //nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
+            nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
             nRt.name = string.Format("{0}.{1}.normTex", name, state.name);
             foreach (var rt in new[] { pRt, nRt })
             {
@@ -148,10 +154,20 @@ namespace GPUAnimator.Baker
                 RenderTexture.active = rt;
                 GL.Clear(true, true, Color.clear);
             }
-
             Debug.Log("frames : " + frames);
 
             var originalMesh = skin.sharedMesh;
+
+            //this.time = 0f;
+            //for (var i = 0; i < frames; i++)
+            //{
+            //    var success = TestAnimation(i, state, dt, originalMesh);
+            //    if (success) {
+            //        break;
+            //    }
+            //}
+
+            this.time = 0f;
             for (var i = 0; i < frames; i++)
             {
                 RecordAnimation(i, state, dt, originalMesh);
@@ -163,11 +179,32 @@ namespace GPUAnimator.Baker
             //meshBuffer?.Release();
         }
 
+
+        private bool TestAnimation(int index, AnimationState state, float dt, Mesh originalMesh)
+        {
+            state.time = time;
+            anim.Sample();
+            GraphicsBuffer positionBuffer = skin.GetVertexBuffer();
+
+            if (positionBuffer != null)
+            {
+                return true; //success
+            }
+
+            //何故か起動直後の何フレームかはVertexBufferが取れない
+            Debug.Log($"No VertexBuffer. index = {index}");
+            this.time += dt;
+
+            return false;
+        }
+
+
         //ここのbakeが重い
         private void RecordAnimation(int index, AnimationState state, float dt, Mesh originalMesh)
         {
             state.time = time;
             anim.Sample();
+            GraphicsBuffer positionBuffer = skin.GetVertexBuffer();
 
             //var kernel = infoTexGen.FindKernel("CalcMesh");
             //uint x, y, z;
@@ -179,12 +216,8 @@ namespace GPUAnimator.Baker
             //infoTexGen.SetBuffer(kernel, "Info", meshBuffer);
             //infoTexGen.Dispatch(kernel, vCount / (int)x + 1, frames / (int)y + 1, 1);
 
-            GraphicsBuffer positionBuffer = skin.GetVertexBuffer();
-
             if (positionBuffer == null)
             {
-                //何故か起動直後の何フレームかはVertexBufferが取れない
-                Debug.Log("No VertexBuffer");
                 return;
             }
 
@@ -194,12 +227,12 @@ namespace GPUAnimator.Baker
             infoTexGen.GetKernelThreadGroupSizes(kernel, out x, out y, out z);
             infoTexGen.SetInt("RecordedFrameIndex", index);
             infoTexGen.SetInt("VertCount", vCount);
+            infoTexGen.SetMatrix("LocalToWorld", skin.worldToLocalMatrix * skin.rootBone.localToWorldMatrix);
             //infoTexGen.SetBuffer(kernel, "Info", meshBuffer);
             infoTexGen.SetBuffer(kernel, "PositionBuffer", positionBuffer);
             infoTexGen.SetTexture(kernel, "OutPosition", pRt);
             infoTexGen.SetTexture(kernel, "OutNormal", nRt);
             infoTexGen.Dispatch(kernel, vCount / (int)x + 1, 1, 1);
-
 
             positionBuffer?.Release();
 

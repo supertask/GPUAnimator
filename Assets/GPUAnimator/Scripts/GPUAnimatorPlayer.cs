@@ -16,7 +16,7 @@ namespace GPUAnimator.Player
 
         MaterialPropertyBlock block;
 
-        private bool isPause = false;
+        private bool isPause = true;
 
         BakedTextureAnimation prev_anim;
         BakedTextureAnimation curr_anim;
@@ -33,7 +33,6 @@ namespace GPUAnimator.Player
 
         void Update()
         {
-
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 animator.speed = 0;

@@ -12,6 +12,8 @@
 		PositionAnimTexture_Next ("Position Anim Texture Next", 2D) = "white" {}
 		NormalAnimTexture ("Normal Anim Texture", 2D) = "white" {}
 		NormalAnimTexture_Next ("Normal Anim Texture Next", 2D) = "white" {}
+
+		_TransitionTime("Transition Time", Float) = 0.0
 	}
 	SubShader
 	{

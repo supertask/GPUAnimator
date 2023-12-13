@@ -17,6 +17,8 @@ RWTexture2D<float4> OutNormal;
 RWStructuredBuffer<MeshInfo> Info;
 int VertCount;
 int RecordedFrameIndex;
+float4x4 LocalToWorld;
+
 
 float3 LoadOriginalVertex(uint index)
 {
@@ -63,7 +65,9 @@ void BakeAnimationTexture (uint3 id : SV_DispatchThreadID)
 
     float3 position = asfloat(PositionBuffer.Load3(vertexIndex * 40) );
     float3 normal = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4) );
+    //float4 tangent = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4 * 2) );
 
-	OutPosition[uvPosition] = float4(position, 1.0);
-	OutNormal[uvPosition] = float4(position, 1.0); //後で修正
+	OutPosition[uvPosition] = float4(position, 1);
+	//OutPosition[uvPosition] = mul(LocalToWorld, float4(position, 1) );
+	OutNormal[uvPosition] = float4(normal, 1.0);
 }
