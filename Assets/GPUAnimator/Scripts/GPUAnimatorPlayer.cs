@@ -16,7 +16,7 @@ namespace GPUAnimator.Player
 
         MaterialPropertyBlock block;
 
-        private bool isPause = true;
+        private bool isPause;
 
         BakedTextureAnimation prev_anim;
         BakedTextureAnimation curr_anim;
@@ -27,8 +27,13 @@ namespace GPUAnimator.Player
         void Start()
         {
             animator = this.GetComponent<Animator>();
+            animator.speed = 1;
+            animator.enabled = true;
+            isPause = false;
+
             meshRenderer = this.GetComponent<MeshRenderer>();
             textureAnimations = this.GetComponent<TextureAnimations>();
+            textureAnimations.Init();
         }
 
         void Update()
@@ -52,11 +57,13 @@ namespace GPUAnimator.Player
             if (block == null)
                 block = new MaterialPropertyBlock();
 
+
             var currAnimState = animator.GetCurrentAnimatorStateInfo(0);
 
-            if (prev_anim == null || prev_anim.fullPathHash != currAnimState.fullPathHash)
+            if (prev_anim == null ||
+                textureAnimations.GetShortNameHash(prev_anim.animationName) != currAnimState.shortNameHash)
             {
-                curr_anim = textureAnimations.Find(currAnimState.fullPathHash);
+                curr_anim = textureAnimations.Find(currAnimState.shortNameHash);
             }
             else
             {
@@ -71,9 +78,10 @@ namespace GPUAnimator.Player
 
             var nextAnimState = animator.GetNextAnimatorStateInfo(0);
 
-            if (prev_next_anim == null || prev_next_anim.fullPathHash != nextAnimState.fullPathHash)
+            if (prev_next_anim == null ||
+                textureAnimations.GetShortNameHash(prev_next_anim.animationName) != nextAnimState.shortNameHash )
             {
-                next_anim = textureAnimations.Find(nextAnimState.fullPathHash);
+                next_anim = textureAnimations.Find(nextAnimState.shortNameHash);
             }
             else
             {
@@ -81,7 +89,6 @@ namespace GPUAnimator.Player
             }
 
             prev_next_anim = next_anim;
-
 
             //Profiler.BeginSample("MY TASK: COMPUTE");
 

@@ -20,15 +20,44 @@ namespace GPUAnimator.Player
             }
         }
 
+        private Dictionary<int, BakedTextureAnimation> animationsDict;
+        private Dictionary<string, int> nameToHashDict;
+
+        public void Init()
+        {
+            animationsDict = new Dictionary<int, BakedTextureAnimation>();
+            nameToHashDict = new Dictionary<string, int>();
+            if (animations == null) { return; }
+            foreach( var anim in animations)
+            {
+                int shortNameHash = Animator.StringToHash(anim.animationName);
+                animationsDict.Add(shortNameHash, anim);
+                nameToHashDict.Add(anim.animationName, shortNameHash);
+            }
+        }
+
+        public int GetShortNameHash(string name)
+        {
+            if (nameToHashDict.ContainsKey(name))
+            {
+                return nameToHashDict[name];
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
         public BakedTextureAnimation Find(int hash)
         {
-            for (int i = 0; i < animations.Length; i++)
+            if (animationsDict.ContainsKey(hash))
             {
-                if (animations[i].fullPathHash == hash)
-                    return animations[i];
+                return animationsDict[hash];
             }
-
-            return null;
+            else
+            {
+                return null;
+            }
         }
 
         public void SetItemSource(List<BakedTextureAnimation> bakedTextureAnimations)

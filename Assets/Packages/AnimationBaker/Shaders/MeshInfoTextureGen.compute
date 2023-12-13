@@ -17,7 +17,8 @@ RWTexture2D<float4> OutNormal;
 RWStructuredBuffer<MeshInfo> Info;
 int VertCount;
 int RecordedFrameIndex;
-float4x4 LocalToWorld;
+float4x4 RootBoneLocalToWorld;
+float4x4 TransformLocalToWorld;
 
 
 float3 LoadOriginalVertex(uint index)
@@ -34,40 +35,31 @@ float3 CalculateNormal(float3 p0, float3 p1, float3 p2)
     return normalize(cross(d10, d20));
 }
 
-//[numthreads(1024,1,1)]
-//void CalcMesh (uint3 id : SV_DispatchThreadID)
-//{
-//    uint index = id.x;
-//    uint3 triIndex = IndexBuffer.Load3(index * 3 * 4); // index * 3[triangle vertices] * 4[bytes]
-//    float3 p0 = LoadOriginalVertex(triIndex.x);
-//    float3 p1 = LoadOriginalVertex(triIndex.y);
-//    float3 p2 = LoadOriginalVertex(triIndex.z);
-//	float3 normal = CalculateNormal(dp0, dp1, dp2);
-//
-//    uint meshBufferIndex = RecordedFrameIndex * VertCount + index;
-//
-//    Info[meshBufferIndex] = MeshInfo(p0, normal);
-//}
-
-
 [numthreads(8,1,1)]
-void BakeAnimationTexture (uint3 id : SV_DispatchThreadID)
+void BakeAnimationTexture(uint3 id : SV_DispatchThreadID)
 {
     uint vertexIndex = id.x;
     uint2 uvPosition = uint2(vertexIndex, RecordedFrameIndex);
-	//uint index = RecordedFrameIndex * VertCount + meshIndex;
 
 	//layout for vertex buffer (observed by using RenderDoc):
 	//float3 position
 	//float3 normal
 	//float4 tangent
 	//therefore total 10 floats and 4 bytes each = 10*4 = 40
-
-    float3 position = asfloat(PositionBuffer.Load3(vertexIndex * 40) );
+    float3 vertex = asfloat(PositionBuffer.Load3(vertexIndex * 40) );
     float3 normal = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4) );
     //float4 tangent = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4 * 2) );
 
-	OutPosition[uvPosition] = float4(position, 1);
-	//OutPosition[uvPosition] = mul(LocalToWorld, float4(position, 1) );
+	//LocalToWorld._11 = LocalToWorld._22 = LocalToWorld._33 = 1.0; //スケール成分を正規化し、スケールを無視
+
+	float4 position = float4(vertex, 1);
+
+	// オブジェクトの全体的な変換を適用
+	//position = mul(TransformLocalToWorld, position);
+
+	// ルートボーンの変換を適用
+	//position = mul(RootBoneLocalToWorld, position);
+
+	OutPosition[uvPosition] = position;
 	OutNormal[uvPosition] = float4(normal, 1.0);
 }

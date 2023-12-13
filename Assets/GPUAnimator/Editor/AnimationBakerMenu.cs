@@ -19,7 +19,6 @@ namespace GPUAnimator.Player
             if (baker == null)
                 baker = targetObject.AddComponent<AnimationTextureBaker>();
 
-            baker.PlayBake(targetObject.name);
         }
     }
 }
