@@ -3,6 +3,10 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using System;
+using Cysharp.Threading.Tasks;
+using System.Threading;
+
+
 
 using GPUAnimator.Player;
 
@@ -17,6 +21,7 @@ namespace GPUAnimator.Baker
     public class AnimationTextureBaker : MonoBehaviour
     {
         readonly string folderName = "BakedAnimationTex";
+
 
         public ComputeShader infoTexGen;
         public Shader playShader;
@@ -41,20 +46,24 @@ namespace GPUAnimator.Baker
         List<BakedTextureAnimation> bakedTextureAnimations;
 
         GameObject go;
+        //private GraphicsBuffer meshBuffer;
 
         string baseDirPath;
         string objectDirPath;
 
         // Use this for initialization
         void Start() { }
-
-        public void PlayBake(string objectName)
+        public async void PlayBake(string objectName)
         {
             anim = GetComponent<Animation>();
             skin = GetComponentInChildren<SkinnedMeshRenderer>();
+            skin.vertexBufferTarget |= GraphicsBuffer.Target.Raw;
+
             vCount = skin.sharedMesh.vertexCount;
             texWidth = Mathf.NextPowerOfTwo(vCount);
             mesh = new Mesh();
+            mesh.indexBufferTarget |= GraphicsBuffer.Target.Raw;
+
             bakedTextureAnimations = new List<BakedTextureAnimation>();
 
             CreateBaseDirectory(objectName);
@@ -62,7 +71,7 @@ namespace GPUAnimator.Baker
 
             foreach (AnimationState state in anim)
             {
-                Bake(state);
+                await Bake(state);
             }
         }
 
@@ -107,23 +116,30 @@ namespace GPUAnimator.Baker
             AssetDatabase.Refresh();
         }
 
-        private void Bake(AnimationState state)
+        private async UniTask Bake(AnimationState state)
         {
-            //yield return new WaitForEndOfFrame();
-
-            Debug.Log("name" + state.name);
-
             anim.Play(state.name);
+            anim.Sample();
+
+            await UniTask.Delay(TimeSpan.FromSeconds(5));
+
+            //Debug.Log("name" + state.name);
+
             frames = Mathf.NextPowerOfTwo((int)(state.length / 0.05f));
             var dt = state.length / frames;
             time = 0f;
             var infoList = new List<VertInfo>();
 
+            //meshBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
+            //meshBuffer.SetData(infoList.ToArray());
+
             Debug.Log("dt : " + dt);
 
             pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
+            //pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
             pRt.name = string.Format("{0}.{1}.posTex", name, state.name);
             nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
+            //nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBFloat);
             nRt.name = string.Format("{0}.{1}.normTex", name, state.name);
             foreach (var rt in new[] { pRt, nRt })
             {
@@ -135,30 +151,75 @@ namespace GPUAnimator.Baker
 
             Debug.Log("frames : " + frames);
 
+            var originalMesh = skin.sharedMesh;
             for (var i = 0; i < frames; i++)
             {
-                RecordAnimation(i, state, dt, infoList);
+                RecordAnimation(i, state, dt, originalMesh);
             }
 
-            CreateAssets(state, infoList);
+            CreateAssets(state);
+
+
+            //meshBuffer?.Release();
         }
 
-        private void CreateAssets(AnimationState state, List<VertInfo> infoList)
+        //ここのbakeが重い
+        private void RecordAnimation(int index, AnimationState state, float dt, Mesh originalMesh)
         {
-            var buffer = new ComputeBuffer(infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
-            buffer.SetData(infoList.ToArray());
+            state.time = time;
+            anim.Sample();
 
-            var kernel = infoTexGen.FindKernel("CSMain");
+            //var kernel = infoTexGen.FindKernel("CalcMesh");
+            //uint x, y, z;
+            //infoTexGen.GetKernelThreadGroupSizes(kernel, out x, out y, out z);
+            //infoTexGen.SetInt("RecordedFrameIndex", index);
+            //infoTexGen.SetInt("VertCount", vCount);
+            //infoTexGen.SetBuffer(kernel, "IndexBuffer", originalMesh.GetIndexBuffer());
+            //infoTexGen.SetBuffer(kernel, "PositionBuffer", skin.GetVertexBuffer());
+            //infoTexGen.SetBuffer(kernel, "Info", meshBuffer);
+            //infoTexGen.Dispatch(kernel, vCount / (int)x + 1, frames / (int)y + 1, 1);
+
+            GraphicsBuffer positionBuffer = skin.GetVertexBuffer();
+
+            if (positionBuffer == null)
+            {
+                //何故か起動直後の何フレームかはVertexBufferが取れない
+                Debug.Log("No VertexBuffer");
+                return;
+            }
+
+
+            var kernel = infoTexGen.FindKernel("BakeAnimationTexture");
             uint x, y, z;
             infoTexGen.GetKernelThreadGroupSizes(kernel, out x, out y, out z);
-
+            infoTexGen.SetInt("RecordedFrameIndex", index);
             infoTexGen.SetInt("VertCount", vCount);
-            infoTexGen.SetBuffer(kernel, "Info", buffer);
+            //infoTexGen.SetBuffer(kernel, "Info", meshBuffer);
+            infoTexGen.SetBuffer(kernel, "PositionBuffer", positionBuffer);
             infoTexGen.SetTexture(kernel, "OutPosition", pRt);
             infoTexGen.SetTexture(kernel, "OutNormal", nRt);
-            infoTexGen.Dispatch(kernel, vCount / (int)x + 1, frames / (int)y + 1, 1);
+            infoTexGen.Dispatch(kernel, vCount / (int)x + 1, 1, 1);
 
-            buffer.Release();
+
+            positionBuffer?.Release();
+
+            /*
+            skin.BakeMesh(mesh);
+
+            infoList.AddRange(Enumerable.Range(0, vCount)
+                .Select(idx => new VertInfo()
+                {
+                    position = mesh.vertices[idx],
+                    normal = mesh.normals[idx]
+                })
+            );
+            */
+
+            time += dt;
+        }
+
+        private void CreateAssets(AnimationState state)
+        {
 
 #if UNITY_EDITOR
 
@@ -187,24 +248,6 @@ namespace GPUAnimator.Baker
 
             prefab = PrefabUtility.ReplacePrefab(go, prefab);
 #endif
-        }
-
-
-        private void RecordAnimation(int index, AnimationState state, float dt, List<VertInfo> infoList)
-        {
-            state.time = time;
-            anim.Sample();
-            skin.BakeMesh(mesh);
-
-            infoList.AddRange(Enumerable.Range(0, vCount)
-                .Select(idx => new VertInfo()
-                {
-                    position = mesh.vertices[idx],
-                    normal = mesh.normals[idx]
-                })
-            );
-
-            time += dt;
         }
     }
 }

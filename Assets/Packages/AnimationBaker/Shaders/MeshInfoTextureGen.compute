@@ -1,24 +1,69 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel BakeAnimationTexture
 
-struct MeshInfo{
+struct MeshInfo
+{
 	float3 position;
 	float3 normal;
 };
+
+ByteAddressBuffer IndexBuffer;
+ByteAddressBuffer PositionBuffer;
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> OutPosition;
 RWTexture2D<float4> OutNormal;
-StructuredBuffer<MeshInfo> Info;
+RWStructuredBuffer<MeshInfo> Info;
 int VertCount;
+int RecordedFrameIndex;
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+float3 LoadOriginalVertex(uint index)
 {
-	int index = id.y * VertCount + id.x;
-	MeshInfo info = Info[index];
+    uint pi = index * 6; // index * (3[position.xyz] + 3[normal.xyz]) * 4[bytes]
+    return asfloat(PositionBuffer.Load3(pi));
+}
 
-	OutPosition[id.xy] = float4(info.position, 1.0);
-	OutNormal[id.xy] = float4(info.normal, 1.0);
+
+float3 CalculateNormal(float3 p0, float3 p1, float3 p2)
+{
+    float3 d10 = p1 - p0;
+    float3 d20 = p2 - p0;
+    return normalize(cross(d10, d20));
+}
+
+//[numthreads(1024,1,1)]
+//void CalcMesh (uint3 id : SV_DispatchThreadID)
+//{
+//    uint index = id.x;
+//    uint3 triIndex = IndexBuffer.Load3(index * 3 * 4); // index * 3[triangle vertices] * 4[bytes]
+//    float3 p0 = LoadOriginalVertex(triIndex.x);
+//    float3 p1 = LoadOriginalVertex(triIndex.y);
+//    float3 p2 = LoadOriginalVertex(triIndex.z);
+//	float3 normal = CalculateNormal(dp0, dp1, dp2);
+//
+//    uint meshBufferIndex = RecordedFrameIndex * VertCount + index;
+//
+//    Info[meshBufferIndex] = MeshInfo(p0, normal);
+//}
+
+
+[numthreads(8,1,1)]
+void BakeAnimationTexture (uint3 id : SV_DispatchThreadID)
+{
+    uint vertexIndex = id.x;
+    uint2 uvPosition = uint2(vertexIndex, RecordedFrameIndex);
+	//uint index = RecordedFrameIndex * VertCount + meshIndex;
+
+	//layout for vertex buffer (observed by using RenderDoc):
+	//float3 position
+	//float3 normal
+	//float4 tangent
+	//therefore total 10 floats and 4 bytes each = 10*4 = 40
+
+    float3 position = asfloat(PositionBuffer.Load3(vertexIndex * 40) );
+    float3 normal = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4) );
+
+	OutPosition[uvPosition] = float4(position, 1.0);
+	OutNormal[uvPosition] = float4(position, 1.0); //後で修正
 }
