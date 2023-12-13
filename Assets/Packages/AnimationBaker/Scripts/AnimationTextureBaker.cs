@@ -61,24 +61,6 @@ namespace GPUAnimator.Baker
         {
             StartCoroutine(PlaySequentially());
         }
-
-        IEnumerator PlaySequentially()
-        {
-            yield return new WaitForSeconds(7.0f);
-
-            this.Init();
-            while(currentClipIndex < animatorClips.Length)
-            {
-                var clip = animatorClips[currentClipIndex];
-                Prepare(clip);
-                animator.enabled = true;
-                animator.Play(clip.name);
-                yield return StartCoroutine(WaitForAnimation(animator, 0));
-                CreateAssets(clip);
-                currentClipIndex++;
-            }
-        }
-
         public void Init()
         {
             animator = GetComponent<Animator>();
@@ -89,8 +71,8 @@ namespace GPUAnimator.Baker
 
             vCount = skin.sharedMesh.vertexCount;
             texWidth = Mathf.NextPowerOfTwo(vCount);
-            mesh = new Mesh();
-            mesh.indexBufferTarget |= GraphicsBuffer.Target.Raw;
+            //mesh = new Mesh();
+            //mesh.indexBufferTarget |= GraphicsBuffer.Target.Raw;
 
             bakedTextureAnimations = new List<BakedTextureAnimation>();
 
@@ -99,7 +81,23 @@ namespace GPUAnimator.Baker
             CreateObject(objectName);
         }
 
+        IEnumerator PlaySequentially()
+        {
+            yield return new WaitForSeconds(3.0f);
 
+            this.Init();
+            while(currentClipIndex < animatorClips.Length)
+            {
+                var clip = animatorClips[currentClipIndex];
+                Prepare(clip);
+                animator.speed = 0;
+                animator.enabled = true;
+                animator.Play(clip.name);
+                yield return StartCoroutine(WaitForAnimation(animator, 0));
+                CreateAssets(clip);
+                currentClipIndex++;
+            }
+        }
 
         IEnumerator WaitForAnimation(Animator animator, int layerIndex)
         {
@@ -112,6 +110,7 @@ namespace GPUAnimator.Baker
                 RecordAnimation(interpolatedFrameIndex);
                 if (stateInfo.normalizedTime >= 1.0f)
                 {
+                    RecordAnimation(this.texHeight - 1);
                     isAnimationPlaying = false;
                 }
                 yield return null;
@@ -163,6 +162,7 @@ namespace GPUAnimator.Baker
             infoTexGen.SetInt("VertCount", vCount);
             //infoTexGen.SetMatrix("LocalToWorld", skin.worldToLocalMatrix * skin.rootBone.localToWorldMatrix);
 
+            infoTexGen.SetVector("_TexSize", new Vector2(texWidth, texHeight));
             infoTexGen.SetMatrix("RootBoneLocalToWorld", skin.rootBone.localToWorldMatrix);
             infoTexGen.SetMatrix("TransformLocalToWorld", skin.transform.localToWorldMatrix);
             infoTexGen.SetBuffer(kernel, "PositionBuffer", positionBuffer);
@@ -233,6 +233,7 @@ namespace GPUAnimator.Baker
             bta.positionAnimTexture = posTex;
             bta.normalAnimTexture = normTex;
             bta.texelSize = new Vector4(1.0f / posTex.width, 1.0f / posTex.height, posTex.width, posTex.height);
+
             bakedTextureAnimations.Add(bta);
             go.GetComponent<TextureAnimations>().SetItemSource(bakedTextureAnimations);
 

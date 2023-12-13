@@ -19,7 +19,7 @@ int VertCount;
 int RecordedFrameIndex;
 float4x4 RootBoneLocalToWorld;
 float4x4 TransformLocalToWorld;
-
+float2 _TexSize;
 
 float3 LoadOriginalVertex(uint index)
 {
@@ -40,6 +40,7 @@ void BakeAnimationTexture(uint3 id : SV_DispatchThreadID)
 {
     uint vertexIndex = id.x;
     uint2 uvPosition = uint2(vertexIndex, RecordedFrameIndex);
+	if (uvPosition.x >= _TexSize.x || uvPosition.y >= _TexSize.y) { return; }
 
 	//layout for vertex buffer (observed by using RenderDoc):
 	//float3 position
@@ -58,7 +59,7 @@ void BakeAnimationTexture(uint3 id : SV_DispatchThreadID)
 	//position = mul(TransformLocalToWorld, position);
 
 	// ルートボーンの変換を適用
-	//position = mul(RootBoneLocalToWorld, position);
+	position = mul(RootBoneLocalToWorld, position);
 
 	OutPosition[uvPosition] = position;
 	OutNormal[uvPosition] = float4(normal, 1.0);
