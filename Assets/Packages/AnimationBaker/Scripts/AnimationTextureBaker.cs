@@ -148,7 +148,7 @@ namespace GPUAnimator.Baker
             var buffer = new ComputeBuffer(infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
             buffer.SetData(infoList.ToArray());
 
-            var kernel = infoTexGen.FindKernel("CSMain");
+            var kernel = infoTexGen.FindKernel("BakeTexture");
             uint x, y, z;
             infoTexGen.GetKernelThreadGroupSizes(kernel, out x, out y, out z);
 

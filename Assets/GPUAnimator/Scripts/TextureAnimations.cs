@@ -19,16 +19,61 @@ namespace GPUAnimator.Player
                 return animations;
             }
         }
+        //public BakedTextureAnimation Find(string name)
+        //{
+        //    for (int i = 0; i < animations.Length; i++)
+        //    {
+        //        if (animations[i].animationName == name)
+        //            return animations[i];
+        //    }
+
+        //    return null;
+        //}
+
+        private Dictionary<int, BakedTextureAnimation> animationsDict;
+        private Dictionary<string, int> nameToHashDict;
+
+        public void Init()
+        {
+            animationsDict = new Dictionary<int, BakedTextureAnimation>();
+            nameToHashDict = new Dictionary<string, int>();
+            for (int i = 0; i < animations.Length; i++)
+            {
+                var anim = animations[i];
+                int shortNameHash = Animator.StringToHash(anim.animationName);
+                animationsDict.Add(shortNameHash, anim);
+                nameToHashDict.Add(anim.animationName, shortNameHash);
+            }
+        }
+
+        public int GetShortNameHash(string name)
+        {
+            if (nameToHashDict.ContainsKey(name))
+            {
+                return nameToHashDict[name];
+            }
+            else
+            {
+                return -1;
+            }
+        }
 
         public BakedTextureAnimation Find(int hash)
         {
-            for (int i = 0; i < animations.Length; i++)
+            if (animationsDict.ContainsKey(hash))
             {
-                if (animations[i].fullPathHash == hash)
-                    return animations[i];
+                return animationsDict[hash];
             }
-
-            return null;
+            else
+            {
+                return null;
+            }
+            //for (int i = 0; i < animations.Length; i++)
+            //{
+            //    if (animations[i].fullPathHash == hash)
+            //        return animations[i];
+            //}
+            //return null;
         }
 
         public void SetItemSource(List<BakedTextureAnimation> bakedTextureAnimations)

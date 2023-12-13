@@ -29,11 +29,11 @@ namespace GPUAnimator.Player
             animator = this.GetComponent<Animator>();
             meshRenderer = this.GetComponent<MeshRenderer>();
             textureAnimations = this.GetComponent<TextureAnimations>();
+            textureAnimations.Init();
         }
 
         void Update()
         {
-
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 animator.speed = 0;
@@ -55,9 +55,10 @@ namespace GPUAnimator.Player
 
             var currAnimState = animator.GetCurrentAnimatorStateInfo(0);
 
-            if (prev_anim == null || prev_anim.fullPathHash != currAnimState.fullPathHash)
+            if (prev_anim == null ||
+                textureAnimations.GetShortNameHash(prev_anim.animationName) != currAnimState.shortNameHash)
             {
-                curr_anim = textureAnimations.Find(currAnimState.fullPathHash);
+                curr_anim = textureAnimations.Find(currAnimState.shortNameHash);
             }
             else
             {
@@ -72,9 +73,10 @@ namespace GPUAnimator.Player
 
             var nextAnimState = animator.GetNextAnimatorStateInfo(0);
 
-            if (prev_next_anim == null || prev_next_anim.fullPathHash != nextAnimState.fullPathHash)
+            if (prev_next_anim == null ||
+                textureAnimations.GetShortNameHash(prev_next_anim.animationName) != nextAnimState.shortNameHash )
             {
-                next_anim = textureAnimations.Find(nextAnimState.fullPathHash);
+                next_anim = textureAnimations.Find(nextAnimState.shortNameHash);
             }
             else
             {
