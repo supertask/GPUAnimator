@@ -148,12 +148,14 @@ namespace GPUAnimator.Baker
             var buffer = new ComputeBuffer(infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
             buffer.SetData(infoList.ToArray());
 
-            var kernel = infoTexGen.FindKernel("BakeTexture");
+            var kernel = infoTexGen.FindKernel("BakeAnimTexture");
             uint x, y, z;
             infoTexGen.GetKernelThreadGroupSizes(kernel, out x, out y, out z);
+            //uint x = 8,  y = 8;
 
             infoTexGen.SetInt("VertCount", vCount);
             infoTexGen.SetBuffer(kernel, "Info", buffer);
+            infoTexGen.SetMatrix("TransformMatrix", skin.transform.localToWorldMatrix);
             infoTexGen.SetTexture(kernel, "OutPosition", pRt);
             infoTexGen.SetTexture(kernel, "OutNormal", nRt);
             infoTexGen.Dispatch(kernel, vCount / (int)x + 1, frames / (int)y + 1, 1);

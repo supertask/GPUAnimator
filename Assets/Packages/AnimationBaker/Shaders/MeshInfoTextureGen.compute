@@ -1,5 +1,5 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel BakeTexture
+#pragma kernel BakeAnimTexture
 
 struct MeshInfo{
 	float3 position;
@@ -12,13 +12,16 @@ RWTexture2D<float4> OutPosition;
 RWTexture2D<float4> OutNormal;
 StructuredBuffer<MeshInfo> Info;
 int VertCount;
+float4x4 TransformMatrix; 
+
 
 [numthreads(8,8,1)]
-void BakeTexture (uint3 id : SV_DispatchThreadID)
+void BakeAnimTexture (uint3 id : SV_DispatchThreadID)
 {
 	int index = id.y * VertCount + id.x;
 	MeshInfo info = Info[index];
 
-	OutPosition[id.xy] = float4(info.position, 1.0);
+	float4 transformePosition = mul(TransformMatrix, float4(info.position, 1.0));
+	OutPosition[id.xy] = transformePosition;
 	OutNormal[id.xy] = float4(info.normal, 1.0);
 }
