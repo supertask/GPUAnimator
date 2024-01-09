@@ -1,22 +1,77 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel BakeAnimTexture
+#pragma kernel BakeAnimationTexture
+#pragma kernel BakeAnimationTextureLegacy
 
-struct MeshInfo{
+struct MeshInfo
+{
 	float3 position;
 	float3 normal;
 };
+
+ByteAddressBuffer IndexBuffer;
+ByteAddressBuffer PositionBuffer;
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> OutPosition;
 RWTexture2D<float4> OutNormal;
-StructuredBuffer<MeshInfo> Info;
+RWStructuredBuffer<MeshInfo> Info;
 int VertCount;
+int RecordedFrameIndex;
+float4x4 RootBoneLocalToWorld;
+float4x4 TransformLocalToWorld;
+float2 _TexSize;
+
+float3 LoadOriginalVertex(uint index)
+{
+    uint pi = index * 6; // index * (3[position.xyz] + 3[normal.xyz]) * 4[bytes]
+    return asfloat(PositionBuffer.Load3(pi));
+}
+
+
+float3 CalculateNormal(float3 p0, float3 p1, float3 p2)
+{
+    float3 d10 = p1 - p0;
+    float3 d20 = p2 - p0;
+    return normalize(cross(d10, d20));
+}
+
+[numthreads(8,1,1)]
+void BakeAnimationTexture(uint3 id : SV_DispatchThreadID)
+{
+    uint vertexIndex = id.x;
+    uint2 uvPosition = uint2(vertexIndex, RecordedFrameIndex);
+	if (uvPosition.x >= _TexSize.x || uvPosition.y >= _TexSize.y) { return; }
+
+	//layout for vertex buffer (observed by using RenderDoc):
+	//float3 position
+	//float3 normal
+	//float4 tangent
+	//therefore total 10 floats and 4 bytes each = 10*4 = 40
+    float3 vertex = asfloat(PositionBuffer.Load3(vertexIndex * 40) );
+    float3 normal = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4) );
+    //float4 tangent = asfloat(PositionBuffer.Load3(vertexIndex * 40 + 3 * 4 * 2) );
+
+	//LocalToWorld._11 = LocalToWorld._22 = LocalToWorld._33 = 1.0; //スケール成分を正規化し、スケールを無視
+
+	float4 position = float4(vertex, 1);
+
+	// オブジェクトの全体的な変換を適用
+	//position = mul(TransformLocalToWorld, position);
+
+	// ルートボーンの変換を適用
+	//RootBoneLocalToWorld._11 = RootBoneLocalToWorld._22 = RootBoneLocalToWorld._33 = 1.0; //スケール成分を正規化し、スケールを無視
+	position = mul(RootBoneLocalToWorld, position);
+
+	OutPosition[uvPosition] = position;
+	OutNormal[uvPosition] = float4(normal, 1.0);
+
+}
+
 float4x4 TransformMatrix; 
 
-
 [numthreads(8,8,1)]
-void BakeAnimTexture (uint3 id : SV_DispatchThreadID)
+void BakeAnimationTextureLegacy (uint3 id : SV_DispatchThreadID)
 {
 	int index = id.y * VertCount + id.x;
 	MeshInfo info = Info[index];

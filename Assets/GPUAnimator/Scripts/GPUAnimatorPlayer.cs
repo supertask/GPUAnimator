@@ -18,7 +18,7 @@ namespace GPUAnimator.Player
 
         MaterialPropertyBlock block;
 
-        private bool isPause = false;
+        private bool isPause;
 
         BakedTextureAnimation prevAnim;
         BakedTextureAnimation currAnim;
@@ -29,6 +29,10 @@ namespace GPUAnimator.Player
         void Start()
         {
             animator = this.GetComponent<Animator>();
+            animator.speed = 1;
+            animator.enabled = true;
+            isPause = false;
+
             meshRenderer = this.GetComponent<MeshRenderer>();
             textureAnimations = new TextureAnimations(animations);
         }
@@ -53,6 +57,7 @@ namespace GPUAnimator.Player
 
             if (block == null)
                 block = new MaterialPropertyBlock();
+
 
             var currAnimState = animator.GetCurrentAnimatorStateInfo(0);
 
@@ -85,7 +90,6 @@ namespace GPUAnimator.Player
             }
 
             prevNextAnim = nextAnim;
-
 
             //Profiler.BeginSample("MY TASK: COMPUTE");
 
