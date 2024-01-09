@@ -1,5 +1,6 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel BakeAnimationTexture
+#pragma kernel BakeAnimationTextureLegacy
 
 struct MeshInfo
 {
@@ -59,8 +60,23 @@ void BakeAnimationTexture(uint3 id : SV_DispatchThreadID)
 	//position = mul(TransformLocalToWorld, position);
 
 	// ルートボーンの変換を適用
+	//RootBoneLocalToWorld._11 = RootBoneLocalToWorld._22 = RootBoneLocalToWorld._33 = 1.0; //スケール成分を正規化し、スケールを無視
 	position = mul(RootBoneLocalToWorld, position);
 
 	OutPosition[uvPosition] = position;
 	OutNormal[uvPosition] = float4(normal, 1.0);
+
+}
+
+float4x4 TransformMatrix; 
+
+[numthreads(8,8,1)]
+void BakeAnimationTextureLegacy (uint3 id : SV_DispatchThreadID)
+{
+	int index = id.y * VertCount + id.x;
+	MeshInfo info = Info[index];
+
+	float4 transformePosition = mul(TransformMatrix, float4(info.position, 1.0));
+	OutPosition[id.xy] = transformePosition;
+	OutNormal[id.xy] = float4(info.normal, 1.0);
 }

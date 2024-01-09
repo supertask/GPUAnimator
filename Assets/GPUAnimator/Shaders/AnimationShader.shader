@@ -19,16 +19,19 @@
 	}
 	SubShader
 	{
-		Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Transparent" "Queue" = "Transparent" }
 		LOD 100
+		Blend SrcAlpha OneMinusSrcAlpha
 
 		Pass
 		{
+
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma target 4.5
 			#pragma enable_d3d11_debug_symbols
+
 
 			#include "UnityCG.cginc"
 			#include "AutoLight.cginc"
@@ -41,15 +44,11 @@
 			float4 _TexelSize_Next;
 			float _TransitionTime;
 
-			//sampler2D PositionAnimTexture, PositionAnimTexture_Next, NormalAnimTexture, NormalAnimTexture_Next;
-			// シェーダーのプロパティ宣言部分
 			Texture2D<float3> PositionAnimTexture;
 			Texture2D<float3> PositionAnimTexture_Next;
 			Texture2D<float3> NormalAnimTexture;
 			Texture2D<float3> NormalAnimTexture_Next;
 
-			StructuredBuffer<float3> PositionBuffer;
-			StructuredBuffer<float3> NormalBuffer;
 			
 			struct appdata
 			{
@@ -77,29 +76,15 @@
 			{
 				v2f o;
 
-				//float3 vertex = PositionBuffer[v.vid];
-				//float3 normal = NormalBuffer[v.vid];
-
-
-
-				// テクスチャ座標の計算
 				int2 texCoord = int2(v.vid, _NormalizedAnimTime * _TexelSize.w);
-
-				// アニメーションデータの取得
 				float3 vertex = PositionAnimTexture.Load(int3(texCoord, 0)).xyz;
 				float3 normal = NormalAnimTexture.Load(int3(texCoord, 0)).xyz;
 
-				// トランジションがある場合の処理
-				//if (_TransitionTime > 0)
-				//{
-					int2 texCoordNext = int2(v.vid, _NormalizedAnimTime_Next * _TexelSize_Next.w);
-					float3 nextVertex = PositionAnimTexture_Next.Load(int3(texCoordNext, 0)).xyz;
-					float3 nextNormal = NormalAnimTexture_Next.Load(int3(texCoordNext, 0)).xyz;
-
-					// 線形補間で位置と法線を更新
-					vertex = lerp(vertex, nextVertex, _TransitionTime);
-					normal = lerp(normal, nextNormal, _TransitionTime);
-				//}
+				int2 texCoordNext = int2(v.vid, _NormalizedAnimTime_Next * _TexelSize_Next.w);
+				float3 nextVertex = PositionAnimTexture_Next.Load(int3(texCoordNext, 0)).xyz;
+				float3 nextNormal = NormalAnimTexture_Next.Load(int3(texCoordNext, 0)).xyz;
+				vertex = lerp(vertex, nextVertex, _TransitionTime);
+				normal = lerp(normal, nextNormal, _TransitionTime);
 
 				o.vertex = UnityObjectToClipPos(vertex);
 				o.posWorld = mul(unity_ObjectToWorld, vertex);
@@ -136,8 +121,8 @@
 				float3 lightFinal = rimLighting + diffuseReflection + specularReflection + UNITY_LIGHTMODEL_AMBIENT.xyz;
 
 				/// Final Color:
-				float3 finalColor = lightFinal * color;
-				fixed4 finalRGBA = fixed4(finalColor, 1);
+				float3 finalColor = (1 - color) * 0.65;
+				fixed4 finalRGBA = fixed4(finalColor, color.a);
 
 				return finalRGBA;
 			}
