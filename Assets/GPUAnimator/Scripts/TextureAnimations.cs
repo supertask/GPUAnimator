@@ -5,52 +5,41 @@ using UnityEngine;
 
 namespace GPUAnimator.Player
 {
-    public class TextureAnimations : MonoBehaviour
+    public class TextureAnimations
     {
+        private BakedTextureAnimation[] _animations;
+        private Dictionary<string, int> _nameToHashDict;
+        private Dictionary<int, BakedTextureAnimation> _animationsDict;
+        private Dictionary<int, BakedTextureExtraInfo> _animationsExtraDict;
 
-        [SerializeField]
-        BakedTextureAnimation[] animations;
-
-
-        public BakedTextureAnimation[] Animations
+        public TextureAnimations(BakedTextureAnimation[] animations)
         {
-            get
+            _animations = animations;
+            _animationsDict = new Dictionary<int, BakedTextureAnimation>();
+            _nameToHashDict = new Dictionary<string, int>();
+            _animationsExtraDict = new Dictionary<int, BakedTextureExtraInfo>();
+            for (int i = 0; i < _animations.Length; i++)
             {
-                return animations;
-            }
-        }
-        //public BakedTextureAnimation Find(string name)
-        //{
-        //    for (int i = 0; i < animations.Length; i++)
-        //    {
-        //        if (animations[i].animationName == name)
-        //            return animations[i];
-        //    }
+                var anim = _animations[i];
 
-        //    return null;
-        //}
-
-        private Dictionary<int, BakedTextureAnimation> animationsDict;
-        private Dictionary<string, int> nameToHashDict;
-
-        public void Init()
-        {
-            animationsDict = new Dictionary<int, BakedTextureAnimation>();
-            nameToHashDict = new Dictionary<string, int>();
-            for (int i = 0; i < animations.Length; i++)
-            {
-                var anim = animations[i];
+                BakedTextureExtraInfo bakedTextureExtraInfo = new BakedTextureExtraInfo();
                 int shortNameHash = Animator.StringToHash(anim.animationName);
-                animationsDict.Add(shortNameHash, anim);
-                nameToHashDict.Add(anim.animationName, shortNameHash);
+                bakedTextureExtraInfo.texelSize = new Vector4(
+                    1f / anim.positionAnimTexture.width, 1f / anim.positionAnimTexture.height,
+                    anim.positionAnimTexture.width, anim.positionAnimTexture.height);
+                bakedTextureExtraInfo.shortNameHash = shortNameHash;
+
+                _nameToHashDict.Add(anim.animationName, shortNameHash);
+                _animationsDict.Add(shortNameHash, anim);
+                _animationsExtraDict.Add(shortNameHash, bakedTextureExtraInfo);
             }
         }
 
         public int GetShortNameHash(string name)
         {
-            if (nameToHashDict.ContainsKey(name))
+            if (_nameToHashDict.ContainsKey(name))
             {
-                return nameToHashDict[name];
+                return _nameToHashDict[name];
             }
             else
             {
@@ -60,45 +49,50 @@ namespace GPUAnimator.Player
 
         public BakedTextureAnimation Find(int hash)
         {
-            if (animationsDict.ContainsKey(hash))
+            if (_animationsDict.ContainsKey(hash))
             {
-                return animationsDict[hash];
+                return _animationsDict[hash];
             }
             else
             {
                 return null;
             }
-            //for (int i = 0; i < animations.Length; i++)
-            //{
-            //    if (animations[i].fullPathHash == hash)
-            //        return animations[i];
-            //}
-            //return null;
         }
 
-        public void SetItemSource(List<BakedTextureAnimation> bakedTextureAnimations)
+        public BakedTextureExtraInfo GetBakedTextureExtraInfo(string animName)
         {
-            animations = bakedTextureAnimations.ToArray();
+            int shortNameHash = this.GetShortNameHash(animName);
+            if (shortNameHash == -1) { return null; }
+            return this.GetBakedTextureExtraInfo(shortNameHash);
         }
-
-        //   // Use this for initialization
-        //   void Start () {
-
-        //}
-
-        //// Update is called once per frame
-        //void Update () {
-
-        //}
+        
+        public BakedTextureExtraInfo GetBakedTextureExtraInfo(int hash)
+        {
+            if (_animationsExtraDict.ContainsKey(hash))
+            {
+                return _animationsExtraDict[hash];
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 
     [System.Serializable]
     public class BakedTextureAnimation
     {
-        public int fullPathHash;
+        //public int fullPathHash;
         public string animationName;
         public Texture positionAnimTexture;
         public Texture normalAnimTexture;
+        //public Vector4 texelSize;
+    }
+    [System.Serializable]
+    public class BakedTextureExtraInfo
+    {
+        public int shortNameHash;
         public Vector4 texelSize;
     }
+
 }

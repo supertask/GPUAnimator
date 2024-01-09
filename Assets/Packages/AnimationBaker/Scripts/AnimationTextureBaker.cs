@@ -30,6 +30,7 @@ namespace GPUAnimator.Baker
         SkinnedMeshRenderer skin;
         int vCount;
         Animation anim;
+        Animator animator;
         int texWidth;
         Mesh mesh;
 
@@ -50,7 +51,10 @@ namespace GPUAnimator.Baker
 
         public void PlayBake(string objectName)
         {
-            anim = GetComponent<Animation>();
+            //anim = GetComponent<Animation>();
+            animator = GetComponent<Animator>();
+            var clips = animator.runtimeAnimatorController.animationClips;
+
             skin = GetComponentInChildren<SkinnedMeshRenderer>();
             vCount = skin.sharedMesh.vertexCount;
             texWidth = Mathf.NextPowerOfTwo(vCount);
@@ -60,9 +64,9 @@ namespace GPUAnimator.Baker
             CreateBaseDirectory(objectName);
             CreateObject(objectName);
 
-            foreach (AnimationState state in anim)
+            foreach (AnimationClip clip in clips)
             {
-                Bake(state);
+                Bake(clip);
             }
         }
 
@@ -96,8 +100,7 @@ namespace GPUAnimator.Baker
             go.AddComponent<MeshFilter>().sharedMesh = skin.sharedMesh;
             go.AddComponent<Animator>();
             go.AddComponent<GPUAnimatorPlayer>();
-
-            go.AddComponent<TextureAnimations>();
+            //go.AddComponent<TextureAnimations>();
 
             var prefabPath = Path.Combine(objectDirPath, go.name + ".prefab").Replace("\\", "/");
 
@@ -107,24 +110,22 @@ namespace GPUAnimator.Baker
             AssetDatabase.Refresh();
         }
 
-        private void Bake(AnimationState state)
+        private void Bake(AnimationClip clip)
         {
-            //yield return new WaitForEndOfFrame();
-
-            Debug.Log("name" + state.name);
-
-            anim.Play(state.name);
-            frames = Mathf.NextPowerOfTwo((int)(state.length / 0.05f));
-            var dt = state.length / frames;
+            Debug.Log("name" + clip.name);
+            //animator.Play(clip.name);
+            //anim.Play(clip.name);
+            frames = Mathf.NextPowerOfTwo((int)(clip.length / 0.05f));
+            var dt = clip.length / frames;
             time = 0f;
             var infoList = new List<VertInfo>();
 
             Debug.Log("dt : " + dt);
 
             pRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
-            pRt.name = string.Format("{0}.{1}.posTex", name, state.name);
+            pRt.name = string.Format("{0}.{1}.posTex", name, clip.name);
             nRt = new RenderTexture(texWidth, frames, 0, RenderTextureFormat.ARGBHalf);
-            nRt.name = string.Format("{0}.{1}.normTex", name, state.name);
+            nRt.name = string.Format("{0}.{1}.normTex", name, clip.name);
             foreach (var rt in new[] { pRt, nRt })
             {
                 rt.enableRandomWrite = true;
@@ -137,13 +138,13 @@ namespace GPUAnimator.Baker
 
             for (var i = 0; i < frames; i++)
             {
-                RecordAnimation(i, state, dt, infoList);
+                RecordAnimation(i, clip, dt, infoList);
             }
 
-            CreateAssets(state, infoList);
+            CreateAssets(clip, infoList);
         }
 
-        private void CreateAssets(AnimationState state, List<VertInfo> infoList)
+        private void CreateAssets(AnimationClip clip, List<VertInfo> infoList)
         {
             var buffer = new ComputeBuffer(infoList.Count, System.Runtime.InteropServices.Marshal.SizeOf(typeof(VertInfo)));
             buffer.SetData(infoList.ToArray());
@@ -170,13 +171,13 @@ namespace GPUAnimator.Baker
             Graphics.CopyTexture(nRt, normTex);
 
             var bta = new BakedTextureAnimation();
-            bta.fullPathHash = Animator.StringToHash(string.Format("Base Layer.{0}", state.name));
-            bta.animationName = state.name;
+            //bta.fullPathHash = Animator.StringToHash(string.Format("Base Layer.{0}", clip.name));
+            bta.animationName = clip.name;
             bta.positionAnimTexture = posTex;
             bta.normalAnimTexture = normTex;
-            bta.texelSize = new Vector4(1.0f / posTex.width, 1.0f / posTex.height, posTex.width, posTex.height);
+            //bta.texelSize = new Vector4(1.0f / posTex.width, 1.0f / posTex.height, posTex.width, posTex.height);
             bakedTextureAnimations.Add(bta);
-            go.GetComponent<TextureAnimations>().SetItemSource(bakedTextureAnimations);
+            go.GetComponent<GPUAnimatorPlayer>().SetBakedTexAnimations(bakedTextureAnimations);
 
             string posTexPath = Path.Combine(objectDirPath, pRt.name + ".asset");
             string normTexPath = Path.Combine(objectDirPath, nRt.name + ".asset");
@@ -192,10 +193,11 @@ namespace GPUAnimator.Baker
         }
 
 
-        private void RecordAnimation(int index, AnimationState state, float dt, List<VertInfo> infoList)
+        private void RecordAnimation(int index, AnimationClip clip, float dt, List<VertInfo> infoList)
         {
-            state.time = time;
-            anim.Sample();
+            animator.Play(clip.name, 0, (float)index / frames);
+            animator.Update(0);
+
             skin.BakeMesh(mesh);
 
             infoList.AddRange(Enumerable.Range(0, vCount)
