@@ -70,6 +70,7 @@ namespace GPUAnimator.Baker
             foreach (AnimationClip clip in animatorClips)
             {
                 Prepare(clip);
+                time = 0f;
                 var infoList = new List<VertInfo>();
                 for (var i = 0; i < this.texHeight; i++)
                 {
@@ -193,7 +194,7 @@ namespace GPUAnimator.Baker
             infoTexGen.SetMatrix("TransformMatrix", skin.transform.localToWorldMatrix);
             infoTexGen.SetTexture(kernel, "OutPosition", pRt);
             infoTexGen.SetTexture(kernel, "OutNormal", nRt);
-            infoTexGen.Dispatch(kernel, vCount / (int)x + 1, frames / (int)y + 1, 1);
+            infoTexGen.Dispatch(kernel, vCount / (int)x + 1, this.texHeight / (int)y + 1, 1);
             buffer.Release();
         }
 
