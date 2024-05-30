@@ -39,20 +39,20 @@ namespace GPUAnimator.Player
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                animator.speed = 0;
-                animator.enabled = false;
-                isPause = true;
-            }
+            //if (Input.GetKeyDown(KeyCode.Alpha1))
+            //{
+            //    animator.speed = 0;
+            //    animator.enabled = false;
+            //    isPause = true;
+            //}
 
-            if (Input.GetKeyDown(KeyCode.Alpha2))
-            {
-                animator.speed = 1;
-                animator.enabled = true;
-                isPause = false;
-            }
-            if (isPause) { return; }
+            //if (Input.GetKeyDown(KeyCode.Alpha2))
+            //{
+            //    animator.speed = 1;
+            //    animator.enabled = true;
+            //    isPause = false;
+            //}
+            //if (isPause) { return; }
 
 
             if (block == null)
@@ -106,7 +106,7 @@ namespace GPUAnimator.Player
                 block.SetTexture("NormalAnimTexture", currAnim.normalAnimTexture);
 
                 var nextAnimNormalizedTime = nextAnimState.loop ? nextAnimState.normalizedTime % 1 : nextAnimState.normalizedTime;
-                BakedTextureExtraInfo nextAnimInfo = textureAnimations.GetBakedTextureExtraInfo(currAnim.animationName);
+                BakedTextureExtraInfo nextAnimInfo = textureAnimations.GetBakedTextureExtraInfo(nextAnim.animationName);
                 block.SetVector("_TexelSize_Next", nextAnimInfo.texelSize);
                 block.SetFloat("_NormalizedAnimTime_Next", nextAnimNormalizedTime);
                 block.SetTexture("PositionAnimTexture_Next", nextAnim.positionAnimTexture);

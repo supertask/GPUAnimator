@@ -121,8 +121,8 @@
 				float3 lightFinal = rimLighting + diffuseReflection + specularReflection + UNITY_LIGHTMODEL_AMBIENT.xyz;
 
 				/// Final Color:
-				float3 finalColor = (1 - color) * 0.65;
-				fixed4 finalRGBA = fixed4(finalColor, color.a);
+				float3 finalColor = lightFinal * color;
+				fixed4 finalRGBA = fixed4(finalColor, 1);
 
 				return finalRGBA;
 			}
