@@ -15,22 +15,17 @@ public class HorsePlayer : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.Alpha0))
         {
-            animator.SetBool("OnIdle", true);
             animator.SetBool("OnWalk", false);
-            animator.SetBool("OnRun", false);
         }
 
         if(Input.GetKeyDown(KeyCode.Alpha1))
         {
-            animator.SetBool("OnIdle", false);
             animator.SetBool("OnWalk", true);
             animator.SetBool("OnRun", false);
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            animator.SetBool("OnIdle", false);
-            animator.SetBool("OnWalk", false);
             animator.SetBool("OnRun", true);
         }        
     }
