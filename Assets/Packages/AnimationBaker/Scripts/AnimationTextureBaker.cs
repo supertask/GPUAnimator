@@ -62,7 +62,7 @@ namespace GPUAnimator.Baker
 
         private void Start()
         {
-            StartCoroutine(PlaySequentially());
+            //StartCoroutine(PlaySequentially());
         }
         public void LegacyBakeAll()
         {
